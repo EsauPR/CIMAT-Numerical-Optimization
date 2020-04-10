@@ -1,0 +1,161 @@
+---
+title: "Tarea 2: Optimización - Convexidad y Descenso de Gradiente"
+author: "Oscar Esaú Peralta Rosales"
+date: "2/17/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problemas
+
+### Problema 1
+
+  El conjunto $S = \{ a \in \mathcal{R}^k | p(0)=1, |p(t)| \le 1 para un t \in [\alpha, \beta] \}$ donde $a = [a_1, ..., a_1]^T$ y $p(t) = a_1 + a_2t+ ... + a_kt^{k-1}$, ¿Es convexo?.
+
+**Solución**
+
+Sean $a, b \in S$ dos vectores y $\mu \in [0,1]$ por probar que $\mu a + (1-\mu)b \in S$ es verdadera.
+
+Cómo $a, b \in S$ entonces existe un $t \in (\alpha, \beta)$ tal que $p(t) = a_1 + a_2t + ... + a_kt^{k-1}$ y $p(t) = b_1 + b_2t + ... + b_kt^{k-1}$.
+Además notemos que si $p(0) = 1$ entonces $a_1 = 1$ y $b_1=1$.
+
+Comprobemos que si $\mu a + (1-\mu)b \in S$ entonces $p_{ab}(t) = (\mu a_1 + (1-\mu)b_1) + (\mu a_2 + (1-\mu)b_2)t + ... + (\mu a_k + (1-\mu)b_k)t^{k-1r}$ evualuado en cero es 1.
+
+$$
+p_{ab}(t) = (\mu a_1 + (1-\mu)b_1) + (\mu a_2 + (1-\mu)b_2)t + ... + (\mu a_k + (1-\mu)b_k)t^{k-1r}
+$$
+$$
+p_{ab}(0) = (\mu a_1 + (1-\mu)b_1) + (\mu a_2 + (1-\mu)b_2)*0 + ... + (\mu a_k + (1-\mu)b_k)*0
+$$
+$$
+p_{ab}(0) = (\mu a_1 + (1-\mu)b_1) = 1 + \mu a_1 -\mu b_1
+$$
+
+Cómo $a_1 = 1$ y $b_1=1$, entonces $p_{ab}(0) = 1$. 
+
+Por otro lado como $|p(t)| \le 1$ entonces demostremos $|p_{ab}(t)| \le 1$, luego
+
+$$
+|p_{ab}(t)| = |(\mu a_1 + (1-\mu)b_1) + (\mu a_2 + (1-\mu)b_2)t + ... + (\mu a_k + (1-\mu)b_k)t^{k-1r}|
+$$
+$$
+|p_{ab}(t)| = |\mu a_1 + (1-\mu)b_1 + \mu a_2 t + (1-\mu)b_2 t + ... + \mu a_k t^{k-1r} + (1-\mu)b_k t^{k-1r}|
+$$
+$$
+|p_{ab}(t)| = |\mu a_1 + \mu a_2 t +...+ \mu a_k t^{k-1r} + (1-\mu)b_1 + (1-\mu)b_2 t +...+ (1-\mu)b_k t^{k-1r}|
+$$
+$$
+|p_{ab}(t)| = |\mu (a_1 + a_2 t +...+ a_k t^{k-1r}) + (1-\mu) (b_1 + b_2 t +...+ b_k t^{k-1r})|
+$$
+$$
+|p_{ab}(t)| \le \mu |a_1 + a_2 t +...+ a_k t^{k-1r}| + (1-\mu) |b_1 + b_2 t +...+ b_k t^{k-1r}|
+$$
+$$
+|p_{ab}(t)| \le \mu |p(t)| + (1-\mu) |p(t)|
+$$
+
+Como $|p(t)| \le 1$ y $\mu \in [0,1]$ entonces $|p_{ab}(t)| \le 1$. Así $\mu a + (1-\mu)b \in S$ es verdadero y $S$ es convexo.
+
+### Problema 2
+
+  Suponga que *f* es convexa, $\lambda_1 > 0$, $\lambda_2 \le 0$ con $\lambda_1+\lambda_2 = 1$, y sean $x_1,x_2 \in dom\ f$. Muestre que la desigualdad $f(\lambda_1x_!+\lambda_2x_2) \ \ge \lambda_1f(x_1) + \lambda_2f(x_2)$ siempre se cumple.
+  
+**Solución**
+
+Notemos que $\lambda_1 = 1 - \lambda_2$, como $\lambda_2 \le 0$ entonces $\lambda_1 \ge 1$ y dividiendo por $lambda_1$ tenemos que $1 \ge \frac{1}{\lambda_1}$ y como $\lambda_1 \ge 1$ entonces $0 < \frac{1}{\lambda_1} \le 1$, 
+
+Sea $a$ y $b$ dos puntos en el dominio de $f$ y un $\alpha = \frac{1}{\lambda_1} \in (0, 1]$, luego como $f$ es convexa tenemos que
+
+$$
+f(\frac{1}{\lambda_1}a + (1- \frac{1}{\lambda_1})b) \le \frac{1}{\lambda_1}f(a) + (1 - \frac{1}{\lambda_1})f(b)
+$$
+$$
+\lambda_1 f(\frac{1}{\lambda_1}a + (1- \frac{1}{\lambda_1})b) \le f(a) + (\lambda_1 - 1)f(b)
+$$
+$$
+\lambda_1 f(\frac{1}{\lambda_1}a + (1- \frac{1}{\lambda_1})b) \le f(a) - \lambda_2f(b)
+$$
+$$
+f(a) \ge \lambda_1 f(\frac{1}{\lambda_1}a + (1- \frac{1}{\lambda_1})b)+ \lambda_2f(b)
+$$
+
+Tomemos $a = \lambda_1x_1 + \lambda_2x_2$ y $b = x_2$
+
+$$
+f(\lambda_1x_1 + \lambda_2x_2) \ge \lambda_1 f(\frac{\lambda_1x_1 + \lambda_2x_2}{\lambda_1} + (1- \frac{1}{\lambda_1})x_2)+ \lambda_2f(x_2)
+$$
+$$
+f(\lambda_1x_1 + \lambda_2x_2) \ge \lambda_1 f(x_1 + \frac{\lambda_2}{\lambda_1}x_2 + (x_2 - \frac{x_2}{\lambda_1}))+ \lambda_2f(x_2)
+$$
+$$
+f(\lambda_1x_1 + \lambda_2x_2) \ge \lambda_1 f(x_1 + x_2 (\frac{\lambda_2 - 1}{\lambda_1} + 1))+ \lambda_2f(x_2)
+$$
+$$
+f(\lambda_1x_1 + \lambda_2x_2) \ge \lambda_1 f(x_1 + x_2 (\frac{\lambda_2 - 1}{\lambda_1} + {\frac{\lambda_1}{\lambda_1}}))+ \lambda_2f(x_2)
+$$
+$$
+f(\lambda_1x_1 + \lambda_2x_2) \ge \lambda_1 f(x_1 + x_2 (\frac{\lambda_2 + \lambda_1 - 1}{\lambda_1}))+ \lambda_2f(x_2)
+$$
+
+Como $\lambda_1 + \lambda_2 = 1$
+
+$$
+f(\lambda_1x_1 + \lambda_2x_2) \ge \lambda_1 f(x_1 + x_2 (\frac{0}{\lambda_1}))+ \lambda_2f(x_2)
+$$
+
+y así
+
+
+$$
+f(\lambda_1x_1 + \lambda_2x_2) \ge \lambda_1 f(x_1)+ \lambda_2f(x_2)
+$$
+
+### Problema 3
+
+  Muestre que la función $f:\mathcal{R}^n \rightarrow \mathcal{R}$, $f(x) = -\exp(-g(x))$ es convexa, donde $g:\mathcal{R}^n \rightarrow \mathcal{R}$ tiene un dominio convexo y cumple
+
+$$
+\begin{pmatrix}
+	\nabla^2g(x) & \nabla g(x)\\
+	\nabla ^ T g(x) & 1\\
+\end{pmatrix} \ge 0
+$$
+
+para $x \in dom\ g$
+
+**Solución**
+
+$f$ es convexa si su Hessiano asociado es semidefinido positivo o positivo. Así procedamos a calcularlo.
+
+$$
+f(x) = -\exp(-g(x))
+$$
+$$
+\nabla_xf(x) = \exp(-g(x)) \nabla g(x)
+$$
+$$
+\nabla_x^2 f(x) = \exp(-g(x)) \nabla^2 g(x) - \nabla g(x) \exp(-g(x)) \nabla^T g(x)
+$$
+$$
+\nabla_x^2 f(x) = \exp(-g(x)) \Big (\nabla^2 g(x) - \nabla g(x) \nabla^T g(x) \Big)
+$$
+Notemos que $\exp(-g(x))$ es positivo solonos falta comprobar que $\nabla^2 g(x) - \nabla g(x) \nabla^T g(x)$ sea una matriz definida positiva.
+
+
+Notemos que la matriz provista anteriormente es semidefinida positiva y por tanto su determinante debe ser mayor o igual a cero
+
+$$
+det \begin{pmatrix}
+	\nabla^2g(x) & \nabla g(x)\\
+	\nabla ^ T g(x) & 1\\
+\end{pmatrix} = \nabla^2g(x) - \nabla g(x) \nabla ^ T g(x) \ge 0
+$$
+por tanto
+
+$$
+\nabla_x^2 f(x) = \exp(-g(x)) \big (\nabla^2 g(x) - \nabla g(x) \nabla^T g(x) \big) >=0
+$$
+y así, $f$ es una función convexa.

@@ -1,0 +1,318 @@
+---
+title: "Tarea 1. Optimización"
+author: "Oscar Esaú Peralta Rosales"
+date: "2/11/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+```
+
+
+1. Sea $f_1(x_1, x_2) =  x_1^2 - x_2^2$, $f_2(x_1, x_2) =  2x_1x_2$. Representa los conjuntos de nivel asociados con $f_1(x_1, x_2) = 12$ y $f_2(x_1, x_2) = 16$ en la misma gráfica usando python. Indica sobre la gráfica, los puntos $x = [x_1, x_2]^T$ para los cuales $f(x) = [f_1(x_1,x_2), f_2(x_1, x_2)]^T = [12, 16]^T$.
+
+**Solución:**
+
+```{r, include=FALSE}
+library(magick)
+img <- image_read("./clevel.png")
+```
+
+```{r, include=TRUE, echo=FALSE, fig.cap='Contornos de nivel para las funciones f1 y f2'}
+plot(img)
+```
+
+Nota: El archivo fuente se encuentra en el zip adjuunto.
+
+#
+
+2. Considera la función $f(x) = (a^Tx)(b^Tx)$, dónde $a$, $b$ y $x$ son vectores n-dimensionales. Calcula el gradiente $\nabla f(x)$ y el Hessiano $\nabla^2 f(x)$.
+
+**Solución:**
+
+$$
+f(x) = (a^Tx)(b^Tx)
+$$
+  Calculamos la primera derivada mediante la regla de la cadena
+
+$$
+Df(x) = (a^Tx)D(b^Tx) + (b^Tx)D(a^Tx)
+$$
+$$
+Df(x) = a^Txb^T + b^Txa^T
+$$
+
+  El gradiente está dado por $\nabla f(x) = (Df(x))^T$, así
+
+$$
+\nabla f(x) = (a^Txb^T + b^Txa^T)^T
+$$
+$$
+\nabla f(x) = ax^Tb + bx^Ta
+$$
+
+  El hessiano esta dado por $\nabla^2f(x)$, calculamos primero la segunda derivada de $f(x)$
+
+$$
+D^2f(x) = D(a^Txb^T + b^Txa^T)
+$$
+
+  Puesto que $a^Tx$ y $b^Tx$ son productos puntos podemos rescribir lo como
+
+$$
+D^2f(x) = D(x^Tab^T + x^Tba^T)
+$$
+
+  Factorizando $x^T$ tenemos
+
+$$
+D^2f(x) = D(x^T(ab^T + ba^T))
+$$
+
+$$
+D^2f(x) = ab^T + ba^T
+$$
+
+  Así el hessiano es
+
+$$
+\nabla^2 f(x) = (ab^T + ba^T)^T = ab^T + ba^T
+$$
+
+
+#
+
+3. Sea $f(x) = \frac{1}{1+e^{-x}}$ y $g(z) = f(a^Tz+b)$ con $||a||_2 = 1$. Muestra que $D_ag(z) = g(z)(1 - g(z))$.
+
+**Solución:**
+
+Calculamos la derivada direccional de $D_ag(z)$
+
+$$
+D_ag(z) = Df(a^Tz+b)D(a^Tz+b)a
+$$
+$$
+D_ag(z) = Df(a^Tz+b)(D(a^Tz) + Db))a
+$$
+$$
+D_ag(z) = Df(a^Tz+b)a^Ta = Df(a^Tz+b)
+$$
+
+la derivada de $f(x) = \frac{1}{1+e^{-x}}$ es $f'(x) = \frac{e^{-x}}{(1 + e^{-x})^2}$, sea $w=a^Tz+b$, luego
+
+$$
+D_ag(z) = Df(w) = \frac{e^{-w}}{(1 + e^{-w})^2}
+$$
+$$
+D_ag(z) = \frac{1}{(1 + e^{-w})} . \frac{e^{-w}}{(1 + e^{-w})} = \frac{1}{(1 + e^{-w})} . \frac{1+e^{-w}-1}{(1 + e^{-w})}
+$$
+$$
+D_ag(z) = \frac{1}{(1 + e^{-w})} . \Big(1 - \frac{1}{(1 + e^{-w})} \Big)
+$$
+Por definicion $g(z) = f(w) = f(a^Tz+b)$, así
+
+$$
+D_ag(z) = g(z)(1 - g(z) )
+$$
+
+
+#
+
+4. Calcula el gradiente de
+
+$$
+f(\theta) = \frac{1}{2} \sum_{i=1}^{n} \Big[ g(x_i) - g(Ax_i+b) \Big]^2
+$$
+con respecto de $\theta$, donde $\theta = [a_{11},a_{12},a_{21},a_{22},b_{1},a_{2}]$, $x \in \mathcal{R}^2$, $A \in \mathcal{R}^{2x2}$, $b \in \mathcal{R}^2$ son definidos como sigue:
+
+$$
+A = 
+\begin{pmatrix}
+	a_{11} & a_{12}\\
+	a_{21} & a_{22}\\
+\end{pmatrix}
+$$
+$$
+b = 
+\begin{pmatrix}
+	b_{1} & b_{2}\\
+\end{pmatrix} ^ T
+$$
+y $g: \mathcal{R}^2 \rightarrow \mathcal{R} \in \mathcal{C}^1$.
+
+**Solución**
+
+Calculamos la derivada $Df(\theta)$ mediante la regla de la cadena
+
+$$
+Df(\theta) = \frac{1}{2} \sum_{i=1}^{n} 2\big[ g(x_i) - g(Ax_i+b) \big] \big[ Dg(x_i) - Dg(Ax_i+b)D[Ax_i+b] \big]
+$$
+
+Calculamos la derivada para $D[Ax_i+b]$ con respecto a $\theta$
+
+$$
+Ax_i+b = 
+\begin{pmatrix}
+	a_{11} & a_{12}\\
+	a_{21} & a_{22}\\
+\end{pmatrix}
+\begin{pmatrix}
+	x_{i1}\\
+	x_{i2}\\
+\end{pmatrix} 
++
+\begin{pmatrix}
+	b_{1}\\
+	b_{2}\\
+\end{pmatrix}
+= 
+\begin{pmatrix}
+	a_{11}x_{i1} + a_{12}x_{i2} + b_1\\
+	a_{21}x_{i1} + a_{22}x_{i2} + b_2\\
+\end{pmatrix}
+$$
+$$
+D[Ax_i+b] =
+\begin{pmatrix}
+	x_{i1} & x_{i2} & 0 & 0 & 1 & 0\\
+	0 & 0 & x_{i1} & x_{i2} & 0 & 1\\
+\end{pmatrix}
+$$
+
+llamemos $W$ a $D[Ax_i+b]$. Sea $G = [g_1, g_2]$ la derivada de $Dg(Ax_i+b)$ al usar la regla de la cadena, entonces
+
+$$
+Df(\theta) = \frac{1}{2} \sum_{i=1}^{n} 2\big[ g(x_i) - g(Ax_i+b) \big] \big[ Dg(x_i) - GW \big]
+$$
+Así la gradiente queda determinada por
+
+$$
+\nabla f(\theta) = \frac{1}{2} \sum_{i=1}^{n} 2\big[ g(x_i) - g(Ax_i+b) \big] \big[ Dg(x_i) - (GW)^T \big]
+$$
+
+
+#
+
+5. Muestra que $k(A) \ge 1$ dónde $||A|| = max_x \frac{||A||}{||x||}$. Tip: Muestra que $||AB|| \le ||A|| ||B||$.
+
+**Solución**
+
+Demostremos primero que $||AB|| \le ||A|| ||B||$. Supongamos un $x$, vector de dimensión tal que $Ax$ es una operación válida y que $||Ax|| \le ||A|| ||x||$ es falso, entonces definamos:
+
+$$
+||Ax|| > ||A|| ||x||
+$$
+por demostrar que es falso, luego
+
+$$
+\frac{||Ax||}{||x||}  > ||A||
+$$
+
+pero por definición $||A|| = max_x \frac{||A||}{||x||}$ por lo que $\frac{||Ax||}{||x||}$ no puede ser mayor a $||A||$. Así $||Ax|| \le ||A|| ||x||$ es verdadero.
+
+Ahora por definición $||AB|| = max_x \frac{||ABx||}{||x||}$ luego
+
+$$
+||AB|| = max_x \frac{||ABx||}{||x||} \le max_x \frac{||A||||Bx||}{||x||} = ||A|| max_x \frac{||Bx||}{||x||} \le||A||||B||
+$$
+Así
+
+$$
+||AB|| \le ||A||||B||
+$$
+Cómo $k(A) = ||A||||A^{-1}||$, entonces
+
+$$
+ ||AA^{-1}|| \le ||A||||A^{-1}||
+$$
+$$
+||I|| \le k(A)
+$$
+$$
+1 \le k(A)
+$$
+Así, $k(A) \ge 1$.
+
+
+#
+
+6. Demuestra que $x - sin(x) = o(x^2)$ cuando $x \rightarrow 0$.
+
+**Solución**:
+
+Por definición si $f(x) = o(g(x))$ entonces $\lim_{x \to a} \frac{f(x)}{g(x)} = L$, con $L=0$. Entonces por regla de L'Hopital
+
+$$
+\lim_{x \to 0} \frac{x - sin(x)}{x^2} = \lim_{x \to 0} \frac{1 - cos(x)}{2x} = \lim_{x \to 0} \frac{sin(x)}{2} = 0
+$$
+
+Así $x - sin(x) = o(x^2)$. 
+
+
+#
+
+7. Supón que $f(x) = o(g(x))$. Muestra que para algún $\epsilon > 0$ existe un $\delta > 0$ tal que si $0 < ||x|| < \delta$, entonces $|f(x)| < \epsilon |g(x)|$, i.e., $f(x) = O(g(x))$ para un $0 < |x| < \delta$.
+
+**Solución:**
+
+
+Por definición si $f(x) = o(g(x))$ entonces $\lim_{x \to a} \frac{f(x)}{g(x)} = 0$. 
+
+Luego por definición del limite $\lim_{x \to a} \frac{f(x)}{g(x)} = L$ tenemos que para algún $\epsilon > 0$ existe un $\delta > 0$ tal que si $0 < |x| < \delta$ entonces
+
+$$
+\Big |\frac{f(x)}{g(x)} - L \Big | < \epsilon
+$$
+como $L=0$ entonces
+
+$$
+\Big |\frac{f(x)}{g(x)} - 0 \Big | < \epsilon
+$$
+$$
+\frac{|f(x)|}{|g(x)|} < \epsilon
+$$
+$$
+|f(x)| < \epsilon |g(x)|
+$$
+
+Así, como existe un $\epsilon > 0$ tal que $|f(x)| < \epsilon |g(x)|$ entonces por definición $f(x) = O(g(x))$.
+
+
+#
+
+8. Muestra que si las funciones $f:\mathcal{R}^n \rightarrow \mathcal{R}$ y $g:\mathcal{R}^n \rightarrow \mathcal{R}$ satisfacen $f(x) = -g(x) + o(g(x))$ y $g(x) > 0$ para todo $x \ne 0$, entonces para todo $x \ne 0$ suficientemente pequeño, tenemos que $f(x) < 0$.
+
+**Solución**:
+
+Tenemos que
+
+$$
+f(x) = -g(x) + o(g(x))
+$$
+ó
+$$
+f(x) + g(x) = o(g(x))
+$$
+
+Por definición de limite de little-o cuando $x \rightarrow 0$ del problema anterior, existe un $\epsilon > 0$ tal que
+
+$$
+|f(x) + g(x)| < \epsilon |g(x)|
+$$
+
+puesto que $g(x) > 0$ y distribuyendo el valor absoluto
+
+$$
+- \epsilon g(x) < f(x) + g(x) < \epsilon g(x) 
+$$
+
+$$
+- g(x)(\epsilon + 1) < f(x) < g(x) (\epsilon - 1)
+$$
+
+notemos que $- g(x)(\epsilon + 1)$ siempre es negativo puesto que $g(x), \epsilon >  0$, por tanto $g(x)(\epsilon -1)$ debe ser menor que $0$ y $\epsilon \in (0,1)$. Así $f(x) < 0$ para un $\epsilon \in (0,1)$.
+
+
+
