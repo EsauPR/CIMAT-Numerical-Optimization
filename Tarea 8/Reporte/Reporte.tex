@@ -1,0 +1,391 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\ifCLASSINFOpdf
+\else
+    \usepackage[dvips]{graphicx}
+\fi
+\usepackage{url}
+\usepackage{listings}
+% \usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage[spanish]{babel} %Castellanización
+\usepackage[T1]{fontenc} %escribe lo del teclado
+\usepackage[utf8]{inputenc} %Reconoce algunos símbolos
+\usepackage{lmodern} %optimiza algunas fuentes
+\usepackage{blkarray}
+\graphicspath{ {images/} }
+\usepackage{hyperref} % Uso de links
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\usepackage{float}
+\newenvironment{theorem}[2][Theorem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{lemma}[2][Lemma]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{exercise}[2][Exercise]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{question}[2][Question]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{corollary}[2][Corollary]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newcommand*{\defeq}{\stackrel{\text{def}}{=}}
+\newenvironment{solution}{\begin{proof}[Solution]}{\end{proof}}
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+
+
+\usepackage[ruled,vlined]{algorithm2e}
+
+
+\begin{document}
+
+\title{Tarea 8. Optimización, Introducción al Cálculo Variacional}
+
+\author{\IEEEauthorblockN{Oscar Esaú Peralta Rosales}
+\IEEEauthorblockA{\textit{Maestría en Computación} \\
+\textit{Centro de Investigación en Matemáticas}}
+}
+
+\maketitle
+
+
+\subsection*{1. Usa la ecuación de Euler-Lagrange para buscar los extremos de las siguientes funcionales}
+
+\begin{equation}
+    J[y] = \int_{a}^{b} \big( xy\prime + (y\prime)^2 \big)dx
+\end{equation}
+
+\begin{equation}
+    J[y] = \int_{a}^{b} (1+x) (y\prime)^2 dx
+\end{equation}
+
+\textbf{Solución}
+
+La ecuación de Euler-Lagrange está dado por:
+
+\begin{equation*}
+    \frac{\partial f}{\partial y} - \frac{d}{dx} \Big(\frac{\partial f}{\partial y\prime}\Big) = 0
+\end{equation*}
+
+Para la función (1) tenemos que: $\frac{\partial f}{\partial y} = 0$,
+$\frac{\partial f}{\partial y\prime} = x + 2y\prime$ y
+$\frac{d}{dx} \Big(\frac{\partial f}{\partial y\prime}\Big) = 1 + 2y\prime\prime$.
+
+Usando la ecuación de Euler-Lagrange tenemos: $1 + 2y\prime\prime = 0$ y por tanto
+$y\prime\prime = - \frac{1}{2}$.
+
+ntegrando ambos miembros:
+
+\begin{equation*}
+    \int \frac{d y\prime}{dx} dx = - \frac{1}{2} \int dx
+\end{equation*}
+
+\begin{equation*}
+    \int d y\prime = - \frac{1}{2} \int dx
+\end{equation*}
+
+\begin{equation*}
+    y\prime = - \frac{1}{2} x + c_1
+\end{equation*}
+
+Finalmente, integrando nuevamente:
+
+\begin{equation*}
+    \int \frac{dy}{dx} dx = \int (- \frac{1}{2} x + c_1) dx
+\end{equation*}
+
+\begin{equation*}
+    \int dy = \int (- \frac{1}{2} x + c_1) dx
+\end{equation*}
+
+\begin{equation*}
+    y = - \frac{1}{4} x^2 + c_1x + c_2
+\end{equation*}
+
+
+Para la función (2) tenemos que: $\frac{\partial f}{\partial y} = 0$,
+$\frac{\partial f}{\partial y\prime} = 2(1 + x)y\prime$ y
+$\frac{d}{dx} \Big(\frac{\partial f}{\partial y\prime}\Big) = 2y\prime + 2(1+x)y\prime\prime$.
+
+Usando la ecuación de Euler-Lagrange tenemos: $2y\prime + 2(1+x)y\prime\prime = 0$ y por tanto
+$\frac{y\prime\prime}{y\prime} = - \frac{1}{1+x}$.
+
+
+Integrando ambos miembros:
+
+\begin{equation*}
+    \int \frac{1}{y\prime} \frac{dy\prime}{dx} dx = - \int \frac{1}{1+x} dx
+\end{equation*}
+
+\begin{equation*}
+    \int \frac{1}{y\prime} dy\prime = - \int \frac{1}{1+x} dx
+\end{equation*}
+
+\begin{equation*}
+    ln(y\prime) = ln(\frac{1}{1+x}) + c_1
+\end{equation*}
+
+Aplicando la exponencial: $y\prime = \frac{1}{1+x} e^{c_1}$, hacemos $e^{c_1} = c2$ e integrando
+nuevamente:
+
+\begin{equation*}
+    \int \frac{dy}{dx} dx = c_2 \int \frac{1}{1+x} dx
+\end{equation*}
+
+\begin{equation*}
+    y = c_2 ln(1+x) + c_3
+\end{equation*}
+
+
+
+
+\subsection*{2. Derivar las ecuaciones de Euler-Lagrange usando el método de Lagrange de}
+
+\begin{equation}
+    \int_x \int_y F(x, y, f, f_x, f_y) dx dy
+\end{equation}
+
+\begin{equation}
+    \int_x \int_y F(x, y, u, v, u_x, v_x, u_y, v_y) dx dy
+\end{equation}
+
+donde $f,u,v: \mathcal{R}^2 \rightarrow \mathcal{R}$ y $f_x = \frac{\partial f}{\partial x}$,
+$f_y = \frac{\partial f}{\partial y}$, $u_x = \frac{\partial u}{\partial x}$,
+$u_y = \frac{\partial u}{\partial y}$, $v_x = \frac{\partial v}{\partial x}$ y
+$v_y = \frac{\partial v}{\partial y}$.\\
+
+\textbf{Solución}
+
+Para la función (3) introducimos la variación $W(x,y) = f(x,y) + \epsilon \eta(x,y)$,
+con $\eta(x,y) = 0$ sobre todo $\mathcal{C}$ el cual es la curva límite del dominio de integración.
+
+\begin{equation*}
+    I(\epsilon) = \int_x \int_y F(x,y,W,W_x,W_y)dx dy
+\end{equation*}
+
+Diferenciamos con respecto a $\epsilon$
+
+\begin{equation*}
+    I\prime(\epsilon) = \int_x \int_y \Big(
+    \frac{\partial F}{\partial W} \frac{\partial W}{\partial \epsilon}
+    + \frac{\partial F}{\partial W_x} \frac{\partial W_x}{\partial \epsilon}
+    + \frac{\partial F}{\partial W_y} \frac{\partial W_y}{\partial \epsilon}
+    \Big) dx dy
+\end{equation*}
+
+usando $\frac{\partial W}{\partial \epsilon} = \eta$,
+$\frac{\partial W_x}{\partial \epsilon} = \eta_x$ y
+$\frac{\partial W_y}{\partial \epsilon} = \eta_y$
+
+\begin{equation*}
+    I\prime(\epsilon) = \int_x \int_y \Big(
+    \frac{\partial F}{\partial W} \eta
+    + \frac{\partial F}{\partial W_x} \eta_x
+    + \frac{\partial F}{\partial W_y} \eta_y
+    \Big) dx dy
+\end{equation*}
+
+evaluando en $\epsilon=0$
+
+\begin{equation*}
+    I\prime(0) = \int_x \int_y \Big(
+    \frac{\partial F}{\partial f} \eta
+    + \frac{\partial F}{\partial f_x} \eta_x
+    + \frac{\partial F}{\partial f_y} \eta_y
+    \Big) dx dy = 0
+\end{equation*}
+
+puesto que $f(x,y)$ es un extremo para $\epsilon = 0$. Usando el teoremoa de Green para reexpresar
+
+los dos ultimos sumandos tenemos
+
+$$
+    \int_x \int_y \eta \Big[
+    \frac{\partial F}{\partial f}
+    - \frac{\partial }{\partial x} \Big(\frac{\partial F}{\partial f_x}\Big)
+    - \frac{\partial }{\partial y} \Big(\frac{\partial F}{\partial f_y}\Big)
+    \Big] dx dy +
+$$
+$$
+    \int_C \eta \Big(
+    \frac{\partial F}{\partial f_x} \frac{y}{ds}
+    - \Big(\frac{\partial F}{\partial f_y} \frac{x}{ds}
+    \Big) ds = 0
+$$
+
+Como $\eta(x,y) = 0$ en todo $\mathcal{C}$ entonces
+
+$$
+    \int_x \int_y \eta \Big[
+    \frac{\partial F}{\partial f}
+    - \frac{\partial }{\partial x} \Big(\frac{\partial F}{\partial f_x}\Big)
+    - \frac{\partial }{\partial y} \Big(\frac{\partial F}{\partial f_y}\Big)
+    \Big] dx dy = 0
+$$
+
+Así la función extrema $f(x,y)$ debe cumplir que
+
+\begin{equation}
+    \frac{\partial F}{\partial f}
+    - \frac{\partial }{\partial x} \Big(\frac{\partial F}{\partial f_x}\Big)
+    - \frac{\partial }{\partial y} \Big(\frac{\partial F}{\partial f_y}\Big)
+        = 0
+\end{equation}
+
+Para la función 4, proponemos dos variaciones con las mismas condiciones anteriores:
+$W(x,y) = u(x,y) + \epsilon_1 \eta(x,y)$ y $Z(x,y) = v(x,y) + \epsilon_2 \phi(x,y)$, así tenemos
+que:
+
+$$
+I(\epsilon_1, \epsilon_2) = \int_x \int_y F(x, y, W, Z, W_x, Z_x, W_y, Z_y) dx dy
+$$
+
+Derivamos con respecto a $\epsilon_1$ y $epsilon_2$
+
+$$
+    I\prime(\epsilon) =
+    \begin{bmatrix}
+        \int_x \int_y \Big(
+            \frac{\partial F}{\partial W} \eta
+            + \frac{\partial F}{\partial W_x} \eta_x
+            + \frac{\partial F}{\partial W_y} \eta_y
+            \Big) dx dy \\
+        \int_x \int_y \Big(
+            \frac{\partial F}{\partial Z} \eta
+            + \frac{\partial F}{\partial Z_x} \eta_x
+            + \frac{\partial F}{\partial Z_y} \eta_y
+            \Big) dx dy
+    \end{bmatrix}
+$$
+
+Evaluando en $I\prime(0,0)$
+
+$$
+    \begin{bmatrix}
+        \int_x \int_y \Big(
+            \frac{\partial F}{\partial W} \eta
+            + \frac{\partial F}{\partial u_x} \eta_x
+            + \frac{\partial F}{\partial u_y} \eta_y
+            \Big) dx dy \\
+        \int_x \int_y \Big(
+            \frac{\partial F}{\partial Z} \eta
+            + \frac{\partial F}{\partial v_x} \eta_x
+            + \frac{\partial F}{\partial v_y} \eta_y
+            \Big) dx dy
+        \end{bmatrix} = \begin{bmatrix}
+            0\\
+            0
+        \end{bmatrix}
+$$
+
+Usando el teorema de Green llegamos a que:
+
+$$
+    \begin{bmatrix}
+        \int_x \int_y \eta \Big(
+        \frac{\partial F}{\partial v}
+        - \frac{\partial }{\partial x} \big(\frac{\partial F}{\partial u_x}\big)
+        - \frac{\partial }{\partial y} \big(\frac{\partial F}{\partial u_y}\big)
+        \Big) dx dy\\
+        \int_x \int_y \eta \Big(
+        \frac{\partial F}{\partial v}
+        - \frac{\partial }{\partial x} \big(\frac{\partial F}{\partial v_x}\big)
+        - \frac{\partial }{\partial y} \big(\frac{\partial F}{\partial v_y}\big)
+        \Big) dx dy
+        \end{bmatrix} = \begin{bmatrix}
+            0\\
+            0
+        \end{bmatrix}
+$$
+
+Así la funciones extremas $u(x, y)$ y $v(x,y)$ debe cumplir que:
+
+
+\begin{equation}
+    \begin{bmatrix}
+    \frac{\partial F}{\partial v}
+    - \frac{\partial }{\partial x} \big(\frac{\partial F}{\partial u_x}\big)
+    - \frac{\partial }{\partial y} \big(\frac{\partial F}{\partial u_y}\big)\\
+    \frac{\partial F}{\partial v}
+    - \frac{\partial }{\partial x} \big(\frac{\partial F}{\partial v_x}\big)
+    - \frac{\partial }{\partial y} \big(\frac{\partial F}{\partial v_y}\big)\\
+    \end{bmatrix} = \begin{bmatrix}
+        0\\
+        0
+    \end{bmatrix}
+\end{equation}
+
+
+\subsection*{3. Obtener la ecuaciones de Euler-Lagrange de:}
+
+\begin{equation}
+    \int_x \int_y ((f-g)^2 + \lambda ||\nabla f||^2) dx dy
+\end{equation}
+
+\begin{equation}
+    \int_x \int_y ( (p-q-p_xu-q_xv)^2 + \lambda (||\nabla u||^2 + ||\nabla v||^2) ) dx dy
+\end{equation}
+
+donde $f,u,v: \mathcal{R}^2 \rightarrow \mathcal{R}$ y
+$g,p,q: \mathcal{R}^2 \rightarrow \mathcal{R}$ son funciones dadas.
+
+
+\textbf{Solución}
+
+Notemos que podemos reexpresar la ecuación (7) a través del producto interior como
+
+$$
+\int_x \int_y ((f-g)^2 + \lambda (f_x^2 - f_y^2)) dx dy
+$$
+
+Usando (5) tenemos que $\frac{\partial F}{\partial f} = 2(f-g)$,
+$\frac{\partial F}{\partial f_x} = 2\lambda f_x$,
+$\frac{\partial F}{\partial f_y} = 2\lambda f_y$,
+$\frac{\partial}{\partial x}\frac{\partial F}{\partial f_x} = 2\lambda f_{xx}$
+$\frac{\partial}{\partial y}\frac{\partial F}{\partial f_y} = 2\lambda f_{yy}$, así, obtenemos que
+debe cumplir con:
+
+$$
+(f-g) - \lambda(f_{xx} + f_{yy}) = 0
+$$
+
+Para la ecuación (8) tambien podemos reexpresarla usando producto interior como:
+
+$$
+    \int_x \int_y ( (p-q-p_xu-q_xv)^2 + \lambda (u_x^2 + u_y^2 + v_x^2 + v_y^2) ) dx dy
+$$
+
+Usando (7) tenemos que $\frac{\partial F}{\partial v} = -2q_x(p-q-p_xu-q_xv)$,
+$\frac{\partial}{\partial x}\frac{\partial F}{\partial v_x} = 2\lambda v_{xx}$
+$\frac{\partial}{\partial y}\frac{\partial F}{\partial v_y} = 2\lambda v_{yy}$, así, obtenemos que
+debe cumplir con:
+
+$$
+q_x(p-q-p_xu-q_xv) + \lambda (v_{xx} + v_{yy}) = 0
+$$
+
+por otro lado $\frac{\partial F}{\partial u} = -2p_x(p-q-p_xu-q_xv)$,
+$\frac{\partial}{\partial x}\frac{\partial F}{\partial u_x} = 2\lambda u_{xx}$
+$\frac{\partial}{\partial y}\frac{\partial F}{\partial u_y} = 2\lambda u_{yy}$, así, obtenemos
+que también debe cumplir con:
+
+$$
+p_x(p-q-p_xu-q_xv) + \lambda (u_{xx} + u_{yy}) = 0
+$$
+
+\end{document}

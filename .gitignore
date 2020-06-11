@@ -136,3 +136,6 @@ dmypy.json
 *.log
 *.out
 *.synctex.gz
+
+*.vscode
+*.zip

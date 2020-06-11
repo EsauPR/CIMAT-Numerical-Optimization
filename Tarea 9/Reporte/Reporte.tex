@@ -1,0 +1,325 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\ifCLASSINFOpdf
+\else
+    \usepackage[dvips]{graphicx}
+\fi
+\usepackage{url}
+\usepackage{listings}
+% \usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage[spanish]{babel} % Castellanización
+\usepackage[T1]{fontenc} % Escribe lo del teclado
+\usepackage[utf8]{inputenc} % Reconoce algunos símbolos
+\usepackage{lmodern} % Optimiza algunas fuentes
+\usepackage{blkarray}
+\graphicspath{ {images/} }
+\usepackage{hyperref} % Uso de links
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\usepackage{float}
+\newenvironment{theorem}[2][Theorem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{lemma}[2][Lemma]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{exercise}[2][Exercise]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{question}[2][Question]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{corollary}[2][Corollary]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newcommand*{\defeq}{\stackrel{\text{def}}{=}}
+\newenvironment{solution}{\begin{proof}[Solution]}{\end{proof}}
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+
+
+\usepackage[ruled,vlined]{algorithm2e}
+
+
+\begin{document}
+
+\title{Tarea 9. Optimización, Algoritmos Cuasi-Newton}
+
+\author{\IEEEauthorblockN{Oscar Esaú Peralta Rosales}
+\IEEEauthorblockA{\textit{Maestría en Computación} \\
+\textit{Centro de Investigación en Matemáticas}}
+}
+
+\maketitle
+
+\begin{abstract}
+
+Se presentan la implementación de dos algoritmos Cuasi-Newton, el algoritmo DFP
+(Davidon-Fletcher-Powel) obtenida a través de la aproximación del Hessiano usando la corrección de rango 2 y
+el algoritmo BFGS (Broyden-Fletcher-Goldfarb-Shanno) obtenida a través de aproximar la matriz
+inversa del Hessiano mediante la matriz obtenida de la corrección de rango 2. En el apéndice se
+detalla un problema relacionado al tema.
+
+
+\end{abstract}
+
+\begin{IEEEkeywords}
+Gradiente Conjugado No lineal
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+El Método de Newton es un algoritmo de optimización sin restricciones que nos permite obtener un
+óptimo de una función convexa, donde en cada paso la actualización está determinada por
+$x_{k+1} = x_k - \alpha_k H_k^{-1}g_k$. Sin embargo este método require realizar el cálculo del
+Hessiano en cada iteración y su inversa lo cual puede ser muy costoso además de que no garantiza que
+la dirección $d_k = - H_k^{-1}g_k$ sea de descenso. Una de la soluciones a estos problemas son los
+algoritmos Cuasi-Newton. Estos métodos al igual que Descenso de Gradiente solo requieren conocer el
+gradiente de la función objetivo en cada iteración. Así, midiendo los cambios en los gradientes,
+construyen un modelo de la función objetivo que es suficientemente bueno para producir una
+convergencia superlineal \cite{b1}. \\
+
+\section{Metodología}
+
+En el algoritmo DFP realiza la aproximación al Hessiano mediante la corrección de rango 2:
+
+$$
+H_{k+1} = H_{k+1} + \alpha x x^T + \beta y y^T
+$$
+
+satisfaciendo $H_{k+1} y_i = s_i$ para $i = 0,1,2,...,k$ y  $y_k = g_{k+1} - g_k$,
+$s_k = x_{k+1} - x_k$. Generando las matrices de corrección
+
+\begin{equation}
+    H_{k+1}^{DFP} = H_k - \frac{H_k y_k y_k^T H_k}{y_k^T H_k y_k} + \frac{s_k s_k^T}{y_k^T s_k}
+    \label{eq:CH}
+\end{equation}
+
+\begin{equation}
+    B_{k+1}^{DFP} = B_k - \frac{B_k s_k s_k^T B_k}{s_k^T B_k s_k} + \frac{y_k y_k^T}{s_k^T y_k}
+    \label{eq:CB}
+\end{equation}
+
+y usando la fórmula de Sherman-Morrison-Woodbury se puede reescribir como:
+
+\begin{equation}
+    B_{k+1}^{DFP} = (I - \rho_k y_k s_k^T) B_k (I - \rho_k s_k y_k^T) + \rho_k y_k y_k^T
+    \label{eq:DFP}
+\end{equation}
+
+con $\rho_k = \frac{1}{y_k^T s_k}$. \\
+
+El algoritmo de BFGS realiza la aproximación a la inversa del Hessiano a partir de \eqref{eq:DFP},
+obteniendo:
+
+\begin{equation}
+    H_{k+1}^{BFGS} = (I - \rho_k s_k y_k^T) H_k (I - \rho_k y_k s_k^T) + \rho_k s_k s_k^T
+    \label{eq:BFGS}
+\end{equation}
+
+con $\rho_k = \frac{1}{y_k^T s_k}$.
+
+\begin{algorithm}[h]
+    \SetAlgoLined
+    \KwResult{$x^*$}
+	$k=0$ \\
+    \While{$||g_k|| > tol$}{
+        $d_k = - B_k^{-1} g_k$ \\
+        $\alpha_k = $ Calcular usando un método de búsqueda en linea \\
+		$x_{k+1} = x_k + \alpha_k d_k$ \\
+        Calcular $y_k$ y $s_k$\\
+        Calcular $B_{k+1}$ con \eqref{eq:DFP}\\
+        $k= k+1$\\
+	}
+    \caption{Algoritmo DFP}
+    \label{A1}
+\end{algorithm}
+
+El Algoritmo de DFP es mostrado en \ref{A1} y el Algoritmo de BFGS en \ref{A2}, notemos que en
+el caso de DFP podemos usar directamente la inversa del Hessiano \ref{eq:CH}.
+
+\begin{algorithm}[h]
+    \SetAlgoLined
+    \KwResult{$x^*$}
+	$k=0$ \\
+    \While{$||g_k|| > tol$}{
+        $d_k = - H_k g_k$ \\
+        $\alpha_k = $ Calcular usando un método de búsqueda en linea \\
+		$x_{k+1} = x_k + \alpha_k d_k$ \\
+        Calcular $y_k$ y $s_k$\\
+        Calcular $H_{k+1}$ con \eqref{eq:BFGS}\\
+        $k= k+1$\\
+	}
+    \caption{Algoritmo BFGS}
+    \label{A2}
+\end{algorithm}
+
+La implementación (mostrada en el notebook adjunta a este reporte) es directa a través de los los
+Algoritmos de DFP y BGFS, a excepción, por el cálculo del tamaño de paso
+$\alpha_k$. Para obtención del tamaño de paso se usaron los métodos de Backtracking e Interpolación
+Cúbica (no hubo diferencia substancial en su uso), con valores de $c_1$ y $c_2$ entre
+0.3 y 0.4 para la validación de la condición de Armijo. Como matriz inicial para $B_0$ y $H_0$ se
+usó la matriz identidad. \\
+
+Las funciones a optimizar fueron las ya conocidas función de Rosembrock con $n=100$ y la función de
+Wood. Para la evaluación se realizaron 30 corridas sobre cada función con puntos iniciales
+aleatorios. Los resultados obtenidos se muestran en la siguiente sección.
+
+\section{Resultados}
+
+De las 30 ejecuciones indicadas previamente se reportan las siguiente tablas donde se indica el
+promedio de iteraciones realizadas, el promedio de la norma del gradiente en $x^*$ y el promedio de
+tiempo de ejecución.
+
+\begin{table}[htbp]
+    \caption{Tabla comparativa de resultados de 30 ejecuciones con la función de Rosembrock}
+    \begin{center}
+        \begin{tabular}{|c|c|c|c|c|c|c|}
+            \hline
+			\textbf{\textit{Método}}& \textbf{\textit{Iters}}& \textbf{\textit{$||\nabla g(x*)||$}}& \textbf{\textit{Tiempo}} \\
+            \hline
+            DFP  & 247.10 & 4.9450e-09 & 3.65s \\
+            BFGS & 244.53 & 6.1253e-9 & 3.57s \\
+            \hline
+            \multicolumn{4}{l}{}
+        \end{tabular}
+        \label{tab1}
+    \end{center}
+\end{table}
+
+\begin{table}[htbp]
+    \caption{Tabla comparativa de resultados de 30 ejecuciones con la función de Wood}
+    \begin{center}
+        \begin{tabular}{|c|c|c|c|c|c|c|}
+            \hline
+			\textbf{\textit{Método}}& \textbf{\textit{Iters}}& \textbf{\textit{$||\nabla g(x*)||$}}& \textbf{\textit{Tiempo}} \\
+            \hline
+            DFP  & 26.26 & 2.4940e-09 & 0.0086s \\
+            BFGS & 26.70 & 2.2028e-9 & 0.0051s \\
+            \hline
+            \multicolumn{4}{l}{}
+        \end{tabular}
+        \label{tab2}
+    \end{center}
+\end{table}
+
+
+\section{Conclusiones}
+
+Como se observa en los resultados el número de iteraciones y el tiempo de ejecución para el
+algoritmo BFGS es menor que el algoritmo DFP, mostrando una ligera mejora tal cual como se menciona
+en la literatura. El problema detectado fue el encontrar un algoritmo y correctos valores de $c_1$ y
+$c_2$ para la obtención de tamaño de paso, pues con valores no tan adecuados no se llega a la
+convergencia de estos e incluso se provocan errores numéricos.
+
+
+\newpage
+
+\section{Apéndice}
+
+\subsection*{Problemas}
+
+1. Las matrices de corrección de rango 1 se escriben
+
+\begin{equation}
+    B_{k+1}^{RS1} = B_k + \frac{(y_k - B_k s_k)(y_k - B_k s_k)^T}{(y_k - B_k s_k)^T s_k}
+\end{equation}
+
+\begin{equation}
+    H_{k+1}^{RS1} = H_k + \frac{(s_k - H_k y_k)(s_k - H_k y_k)^T}{y_k^T(s_k - H_k y_k)}
+\end{equation}
+
+donde $y_k = g_{k+1} - g_k$ y $s_{k} = x_{k+1} - x_k$
+
+\begin{itemize}
+    \item Derive la matriz $H_{k+1}^{RS1}$ a partir de $B_{k+1}^{RS1}$ usando la fórmula de Sherman-Morrison
+    \item Si $H_k$ es una matriz definida positiva y $y_k^T(s_k - H_k y_k) > 0 $ muestre que $H_{k+1}$ es definida positiva.
+\end{itemize}
+
+
+
+\textbf{Solución} \newline
+
+La fórmula de Sherman-Morrison dice como sigue: sea $A \in \mathcal{R}^{nxn}$ es una matriz cuadrada e
+invertible y $u$, $v$ $\in \mathcal{R}^{n}$ son dos vectores columna entonces $A + uv^T$ es
+invertible ssi $1 + v^TA^{-1}u \ne 0$ y
+
+\begin{equation}
+    (A + uv^T)^{-1} = A^{-1} - \frac{A^{-1} u v^T A^{-1}}{1 + v^T A^{-1} u}
+    \label{eq:SM}
+\end{equation}
+
+Usando \eqref{eq:SM} definimos (omitimos el super índice RS1):
+
+$$
+    B_{k+1} = B_{k} + u v^T
+$$
+
+con $u = \alpha (y_k - B_k s_k)$, $v = (y_k - B_k s_k)$ y
+$\alpha = \frac{1}{(y_k - B_k s_k)^T s_k}$. Luego:
+
+$$
+    B_{k+1}^{-1} = (B_{k} + u v^T)^{-1}
+$$
+
+$$
+    H_{k+1} = B_k^{-1} - \frac{B_k^{-1} u v^T B_k^{-1}}{1 + v^T B_k^{-1} u}
+$$
+
+sustituyendo $u$ y $v$
+
+$$
+    H_{k+1} = B_k^{-1} - \frac{B_k^{-1} \alpha (y_k - B_k s_k) (y_k - B_k s_k)^T B_k^{-1}}{1 + (y_k - B_k s_k)^T B_k^{-1} \alpha (y_k - B_k s_k)}
+$$
+
+$$
+H_{k+1} = H_k - \frac{\alpha (H_ky_k - s_k) (y_k H_k - s_k)^T }{\alpha(\alpha^{-1} + (y_k - B_k s_k)^T H_k (y_k - B_k s_k))}
+$$
+
+$$
+H_{k+1} = H_k - \frac{(H_ky_k - s_k) (y_k H_k - s_k)^T }{ y_k B_k s_k + (y_k - B_k s_k)^T H_k (y_k - B_k s_k)}
+$$
+
+$$
+H_{k+1} = H_k - \frac{(H_ky_k - s_k) (y_k H_k - s_k)^T }{ y_k^T s_k - s_k^T B_k s_k + y_k^T H_k y_k  - 2s_k^T y_k + s_k B_k s_k}
+$$
+
+$$
+H_{k+1} = H_k - \frac{(H_ky_k - s_k) (y_k H_k - s_k)^T }{y_k^T H_k y_k - y_k^T s_k}
+$$
+
+y finalmente al factorizar los signos llegamos a:
+
+\begin{equation}
+    H_{k+1} = H_k + \frac{(s_k - H_ky_k) (s_k - H_ky_k)^T }{y_k^T (s_k - H_k y_k)}
+    \label{eq:e1}
+\end{equation}
+
+Por otro lado sabemos que por definición $H_{k}$ es una matriz simétrica definida positiva. El
+término $y_k^T (s_k - H_k y_k)$ es mayor a cero, por tanto, solo queda concentrarnos que ver que
+el término $(H_ky_k - s_k) (y_k H_k - s_k)^T$ es definida o semidefinida positiva.\\
+
+Sabemos que para una matriz cuadrada $X$ el producto $XX^T$ es una matriz simétrica cuya diagonal
+son los términos al cuadrado de la diagonal de $X$. Por definición una matriz simétrica es definida
+o semidefinida positiva si todos los pivotes son mayor o mayor o igual a cero respectivamente. Por
+tanto $(H_ky_k - s_k) (y_k H_k - s_k)^T$ es simétrica y al menos semidefinida positiva y $H_{k+1}$
+entonces también es simétrica y definida positiva.
+
+\section*{}
+
+\begin{thebibliography}{00}
+\bibitem{b1} Jorge Nocedal, Stephen J. Wright, ``Numerical Optimization,'' Second Edition, Springer.
+\end{thebibliography}
+
+\end{document}

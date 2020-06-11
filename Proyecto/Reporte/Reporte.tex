@@ -1,0 +1,381 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\ifCLASSINFOpdf
+\else
+    \usepackage[dvips]{graphicx}
+\fi
+\usepackage{url}
+\usepackage{listings}
+% \usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage[spanish]{babel} % Castellanización
+\usepackage[T1]{fontenc} % Escribe lo del teclado
+\usepackage[utf8]{inputenc} % Reconoce algunos símbolos
+\usepackage{lmodern} % Optimiza algunas fuentes
+\usepackage{blkarray}
+\graphicspath{ {images/} }
+\usepackage{hyperref} % Uso de links
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\usepackage{float}
+\usepackage{placeins}
+\newenvironment{theorem}[2][Theorem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{lemma}[2][Lemma]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{exercise}[2][Exercise]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{question}[2][Question]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newenvironment{corollary}[2][Corollary]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+\newcommand*{\defeq}{\stackrel{\text{def}}{=}}
+\newenvironment{solution}{\begin{proof}[Solution]}{\end{proof}}
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+
+
+\usepackage[ruled,vlined]{algorithm2e}
+
+
+\begin{document}
+
+\title{Acelerando Barzilai-Borwein}
+
+\author{\IEEEauthorblockN{Peralta Rosales Oscar Esaú - Stack Sánchez Pablo Antonio}
+\IEEEauthorblockA{\textit{Optimización I- Maestría en Computación} \\
+\textit{Centro de Investigación en Matemáticas}}
+}
+
+\maketitle
+
+\begin{abstract}
+    En este proyecto se revisa y presenta un resumen del paper \textit{On the acceleration of the Barzilai-Borwein method} además de la implementación del método de gradiente no monótono adaptativo ANGM ahí presentado junto con sus dos variantes, ANGR1 y ANGR2 usados resolver problemas de optimización sin restriccioes. Estos métodos adaptativos dan algunos pasos no monótonos incluyendo los tradicionales de Barzilai - Borwein y algunos monotonos usando el nuevo tamaño de paso. Los algoritmos propuestos demostraron reducir considerablemente el número de iteraciones necesarias para lograr la convergencia.
+
+    \end{abstract}
+
+
+
+    \IEEEpeerreviewmaketitle
+
+
+
+    \section{Introducción}
+    Los métodos de descenso de gradiente han sido ampliamente utilizados para resolver problemas suaves de optimización sin resricciones
+    \begin{align}
+        \min_{x \in \mathbb{R}^n} f(x)
+    \end{align}
+    generando una secuencia de iterandos
+    \begin{align}
+        x_{k+1} =x_k - \alpha_k g_k
+    \end{align}
+    en donde $f: \mathbb{R}^n \to  \mathbb{R} $ es continua y diferenciable, $g_k = \nabla f(x_k)$ y $\alpha_k > 0$ es el tamaño de paso en la dirección contrria al gradiente. El método más clásico para calcular $\alpha_k$ se conoce como el paso exacto (SD)
+    \begin{align}
+        \alpha_k^{SD} = \arg \min_{\alpha \in \mathbb{R}} f(x_k - \alpha g_k)
+    \end{align}
+    Aunque el paso SD tiene localmente la mayor reducción en la dirección negativa del gradiente, en la practica con frecuencia no tiene un buen desempeño. Teoricamente, cuando $f$ es una función cuadrática y extrictamente convexa como
+    \begin{align}
+        f(x) = \frac{1}{2}x^T A x - b^T x
+    \end{align}
+    en donde $b \in \mathbb{R}$ y $A \in \mathbb{R}^{n\times n}$ es simétrica y postiva definida, el método SD converge de forma Q-lineal y tendrá un efecto de zigzag entre dos direcciones ortogonales.\\
+    Barzilai y Borwein propusieron las siguientes formas de calcular el tamaño de paso, mejorando significativamente el desempeño de los métodos de descenso de gradiente:
+    \begin{align}
+        \alpha_k^{BB1}= \frac{s_{k-1}^T s_{k-1}}{s_{k-1}^Ty_{k-1}}   \hspace{0.6cm} y \hspace{0.6cm}  \alpha_k^{BB2}= \frac{s_{k-1}^T y_{k-1}}{y_{k-1}^Ty_{k-1}}
+    \end{align}
+    en donde $s_{k-1} = x_k - x_{k-1}$ y $y_{k-1} = g_k - g_{k-1}$. Cuando la función objetivo es cuadrática (4), el tamaño de paso $a_k^{BB1}$ es exactamente el tamaño de paso SD pero desfasado por una iteración, mientras $a_k^{BB2}$ será exactamente el tamaño de paso de minimo gradiente (MG):
+    \begin{align*}
+        \alpha_k^{BB1}= \frac{g_{k-1}^T g_{k-1}}{g_{k-1}^TAg_{k-1}}  = \alpha_{k-1}^{SD} \\
+        \alpha_k^{BB2}= \frac{g_{k-1}^T Ag_{k-1}}{g_{k-1}^TA^2g_{k-1}} = \alpha_{k-1}^{MG}
+    \end{align*}
+    Está demostrado que el método de Barzilai-Borwein (BB) converge R-superlineal al minimizar funciones cuadráticas extricamente convexas de dos dimensiones y con R-lineal para el caso general de $n$ dimensiones.\\
+    La propiedad intrínseca de reducir la función objetivo no monotónicamente es la que ocasiona la eficiencia del método de BB. Sin embargo, ha sido señalado que mantener la monotonidad es importante para los métodos de descenso de gradiente, de ahí que en el mencionado trabajo  se busque mejorar y acelerar el algoritmo BB incorporando algunos pasos monotónicos.\\
+
+    Primeramente, se considera acelerar los métodos de descenso de gradiente (2) para funciones cuadráticas (4) usando el siguiente tamaño de paso
+    \begin{align}
+        \alpha_k(\Psi(A)) = \frac{g_{k-1}^T \Psi(A)g_{k-1}}{g_{k-1}^T \Psi(A) g_{k-1}}
+    \end{align}
+    en donde $\Psi(.)$ es una función analítica real en $[\lambda_1, \lambda_n]$ que puede ser expresado por una serie de Laurent
+    \begin{align*}
+        \Psi(z) = \sum_{k= - \infty}^\infty c_k z^k, \hspace{0.5cm} c_k \in \mathbb{R}
+    \end{align*}
+    tal que $0 < \sum_{k = -\infty}^\infty c_k z^k < + \infty$ paa todo $z \in [\lambda_1, \lambda_n]$. Aqui $\lambda_1$ y $\lambda_n$ son los eigenvalores más pequeño y más grande de A.  El método (6) es no monótono y los dos pasos de BB $\alpha_k ^{BB2}$ y $\alpha_k^{BB2}$ se pueden obtener al hacer $\Psi(A) = I$ y $\Psi(A) = A$ respectivamente.
+
+    \section{Metodología}
+
+    \subsection{Derivación del nuevo tamaño de paso}
+
+    Obsérvese que el método (6) es invariante a translaciones y rotaciones cuando se minimizan funciones cuadráticas, por lo tanto para el análisis se asume sin perdida de generalidad que la matriz A es diagonal.
+    \begin{align}
+        A = diag\{\lambda_1, \hdots, \lambda_n\}
+    \end{align}
+    En otros articulos se ha demostrado que una familia de métodos de gradientes incluyendo a SD y MG asintoticamente reduciran sus búsquedas a un subespacio de 2 dimensiones y pueden ser acelerados al explotar ciertas características de ortogonalidad en este subespacio. De igual forma, podemos acelerar la familia (6) de métodos de descenso de gradiente en un subespacio menor si se cumplen algunas propiedades de ortogonalidad.\\
+    Suponga que, para una $k>0$ esxiste $q_k$ que satisface
+    \begin{align}
+        (I - \alpha_{k-1}A)q_k = g_{k-1}
+    \end{align}
+    Ahora, supóngase que la secuencia $\{g_k\}$ se obtiene al aplicar el método de gradiente (2) con tamaño de paso (6) para minimizar una función cuadrática (4) y $q_k$ satisface (8), entonces tenemos
+    \begin{align}
+        q_k^T \Psi(A) g_{k+1} = 0
+    \end{align}
+    Lo anterior muestra una propiedad generalizada de ortogonalidad para $q_k$ y $g_{k+1}$, que es una propiedad clave para derivar el nuevo tamaño de paso.\\
+    Supongamos que tanto $\Psi^r(A)q_{k-1}$ y $\Psi^{1-r}(A)g_k$ son vectores diferentes de cero, en donde $r \in \mathbb{R}$. Ahora minimizamos en la función $f$ en un subespacio bidimensional generado por $\frac{\Psi^r(A)q_{k-1}}{||\Psi^r(A)q_{k-1}||}$ y $\frac{\Psi^{1-r}(A)g_{k}}{||\Psi^{1-r}(A)g_{k}||}$, y sea
+    \begin{align}
+        \rho(t,l):= f(x_k + t\frac{\Psi^r(A)q_{k-1}}{||\Psi^r(A)q_{k-1}||} + l\frac{\Psi^{1-r}(A)g_{k}}{||\Psi^{1-r}(A)g_{k}||} )\\ \nonumber
+        = f(x_k) + \vartheta_k^T\left(\begin{matrix}
+    t \\
+    l\\
+    \end{matrix}\right) + \frac{1}{2}\left(\begin{matrix}
+    t \\
+    l\\
+    \end{matrix}\right) + H_k\left(\begin{matrix}
+    t \\
+    l\\
+    \end{matrix}\right)
+    \end{align}
+    en donde
+    \begin{align}
+        \vartheta_k = B_kg_k= \left(\begin{matrix}
+    \frac{g_k^T \Psi^r(A)q_{k-1}}{||\Psi^r(A)q_{k-1}||} \\
+    \frac{g_k^T \Psi^{1-r}(A)g_{k}}{||\Psi^{1-r}(A)g_{k-1}||}
+    \end{matrix}\right)
+    \end{align}
+
+    con
+    $$B_k= \left(\frac{\Psi^r(A)q_{k-1}}{||\Psi^r(A)q_{k-1}||}, \frac{\Psi^{1-r}(A)g_{k}}{||\Psi^{1-r}(A)g_{k}||}\right)$$
+    y
+    \begin{align}
+       & H_k = B_kAB_k^T =& \\ \nonumber
+        &\left(\begin{matrix}
+    \frac{q_{k-1}^T \Psi^{2r}(A)Aq_{k-1}}{||\Psi^r(A)q_{k-1}||^2}  &  \frac{q_{k-1}^T \Psi(A)Ag_k}{||\Psi^r(A)q_{k-1}|| ||\Psi^{1-r}(A)g_k||}  \\
+    \frac{q_{k-1}^T \Psi(A)Ag_k}{||\Psi^r(A)q_{k-1}|| ||\Psi^{1-r}(A)g_k||}   &  \frac{q_{k-1}^T \Psi^{2(1-r)}(A)Ag_{k}}{||\Psi^{1-r}(A)g_{k}||^2}  \\
+    \end{matrix}\right)&
+    \end{align}
+    Denotamos los componentes de $ H_k$ con $H_k^{(ij)}$, $i,j=1,2$. Note que $B_k B_k^T = I$ cuando $g_k^T \Psi(A)q_{k-1} = 0$.\\
+    Suponga que un método de gradiente (2) se aplica para minimizar una función cuadrática de dos dimensión (4) con $\alpha_k$ dado por (6) para toda $k \neq K_0$ y usa el tamaño de paso.
+    \begin{align}
+        \Tilde{\alpha}_{k_0} = \frac{2}{\left (H_{k_0}^{(11)} + H_{k_0}^{(22)} \right) + \sqrt{\left (H_{k_0}^{(11)} + H_{k_0}^{(22)} \right)^2 + 4\left(H_{k_0}^{(12)} \right)^2}}
+    \end{align}
+    Note que haciendo $\Psi(A)= I$, $\Psi(A)=A$ y $r=\frac{1}{2}$ en (12), y haciendo $k_0 = k$ en (13), podemos derivar los siguientes dos tamaños de pasos:
+    \begin{align*}
+        &\Tilde{\alpha}_k^{BB1} =& \\
+        &\frac{2}{\frac{q_{k-1}^T A q_{k-1}}{||q_{k-1}||^q} + \frac{1}{\alpha_k^{SD}} + \sqrt{
+        \left(\frac{q_{k-1}^T A q_{k-1}}{||q_{k-1}||^2} - \frac{1}{\alpha_k^{SD}}\right)^2 +
+        \frac{4\left( q_{k-1}^T A g_k\right)^2}{||q_{k-1}||^2 ||g_k||^2}
+        }}&
+    \end{align*}
+
+    \begin{align*}
+        \Tilde{\alpha}_k^{BB2} = \frac{2}{ \frac{1}{\hat{a}_{k-1}} + \frac{1}{\alpha_k^{MG}} + \sqrt{\left(\frac{1}{\hat{a}_{k-1}} - \frac{1}{\alpha_k^{MG}} \right)^2 + \Gamma_k }   }
+    \end{align*}
+    en donde
+    \begin{align}
+        \hat{a}_k = \frac{q_k^T A q_k}{q_k^T A^2q_k} \hspace{0.4cm} y \hspace{0.4cm} \Gamma_k = \frac{4 \left(q_{k-1}^T A^2g_k \right)^2}{q_{k-1}^T A q_{k-1}g_k^T Ag_k}
+    \end{align}
+    Con base en el análisis anterior, se propone un método de gradiente no monótono adaptativo (ANGM) y sus dos variantes, ANGR1 y ANGR2 \cite{b1} para resolver problemas de optimización sin restriccioes. Estos métodos adaptativos dan algunos pasos no monótonos incluyendo los pasos tradicionales de BB (5) y algunos pasos monotonos usando el nuevo tamaño de paso. \\
+
+    ANGM aplica la siguiente estrategia para escoger el tamaño de paso:
+    \begin{align}
+        \alpha_k =
+         \begin{cases}
+           \text{min\{$\alpha_k^{BB2}$, $\alpha_{k-1}^{BB1}$\}} &\quad\text{si } \alpha_k^{BB2}<\tau_1 \hspace{0.2cm}\\
+           \text{} &\quad\text{y} \hspace{0.2cm} ||g_{k-1}|| < \tau_2||g_k||\\
+            \text{$\Tilde{\alpha}_k^{BB2}$} &\quad\text{si  } \alpha_k^{BB2}<\tau_1 \hspace{0.2cm}\\
+            \text{} &\quad\text{y} \hspace{0.2cm} ||g_{k-1}|| \geq \tau_2||g_k||\\
+            \text{$\alpha_k^{BB1}$} &\quad\text{otro caso}
+         \end{cases}
+    \end{align}
+
+    Notemos que para obtener $\Tilde{\alpha}_k^{BB2}$ es necesario calcular $\alpha_k^{MG}$ lo que resulta complicado cuando la función objetivo no es cuadrática. En cambio, el cálculo de $\Tilde{\alpha}_{k-1}^{BB2}$ solo requiere $\alpha_k^{BB2}$ que es fácil de obtener. Por lo tanto para la primera variante de ANGM, simplemente se reemplaza $\Tilde{\alpha}_k^{BB2}$ por $\Tilde{\alpha}_{k-1}^{BB2}$. Así, ANGR1 aplica la siguiente estrategia para escoger el tamaño de paso:
+    \begin{align}
+        \alpha_k =
+         \begin{cases}
+           \text{min\{$\alpha_k^{BB2}$, $\alpha_{k-1}^{BB1}$\}} &\quad\text{si } \alpha_k^{BB2}<\tau_1 \hspace{0.2cm}\\
+           \text{} &\quad\text{y} \hspace{0.2cm} ||g_{k-1}|| < \tau_2||g_k||\\
+            \text{$\Tilde{\alpha}_{k-1}^{BB2}$} &\quad\text{si  } \alpha_k^{BB2}<\tau_1 \hspace{0.2cm}\\
+            \text{} &\quad\text{y} \hspace{0.2cm} ||g_{k-1}|| \geq \tau_2||g_k||\\
+            \text{$\alpha_k^{BB1}$} &\quad\text{otro caso}
+         \end{cases}
+    \end{align}
+    Por otro lado, dado que el cálculo de $\Tilde{\alpha}_{k-1}^{BB2}$ necesita $\hat{\alpha}_{k-2}$ y $\tau_{k-1}$, y además
+    $\Tilde{\alpha}_{k-1}^{BB2} \leq min\{\alpha_k^{BB2}, \hat{\alpha}_{k-2}\}$.
+    Asi, para simplificar ANGR1, se reemplaza $\Tilde{\alpha}_{k-1}^{BB2}$ por su cota superior. ANGR2 aplica la siguiente estrategia para escoger el tamaño de paso:
+    \begin{align}
+        \alpha_k =
+         \begin{cases}
+           \text{min\{$\alpha_k^{BB2}$, $\alpha_{k-1}^{BB1}$\}} &\quad\text{si } \alpha_k^{BB2}<\tau_1 \hspace{0.2cm}\\
+           \text{} &\quad\text{y} \hspace{0.2cm} ||g_{k-1}|| < \tau_2||g_k||\\
+            \text{min$\{\alpha_k^{BB2}, \hat{\alpha}_{k-2}\}$} &\quad\text{si} \alpha_k^{BB2}<\tau_1 \hspace{0.2cm}\\
+            \text{} &\quad\text{y} \hspace{0.2cm} ||g_{k-1}|| \geq \tau_2||g_k||\\
+            \text{$\alpha_k^{BB1}$} &\quad\text{otro caso}
+         \end{cases}
+    \end{align}
+
+    Notemos que para los nuevos 3 métodos, ANGM, ANGR1 y ANGR2 es necesario calcular $q_k$ para obtener los tamaños de pasos. Sin embargo, calcular $q_k$ exactamente de (8) puede ser tan difícil como minimicar la función cuadrática. Nótese que el $q_k$ que satisface (8) también satisface la ecuación de la secante.
+    $$q_k^T g_k = ||g_{k-1}||^2$$
+    Por lo tanto se puede encontrar una aproximación de $q_k$. Una manera eficiente es tratar al Hessiano $A$ como matriz diagonal (7) y derivar $q_k$ de (8), que es cuando $g_k^{(i)} \neq 0$
+    $$q_k^{(i)}= \frac{g_{k-1}^{(i)}}{1 - \alpha_{k-1}\lambda_i} = \frac{\left(g_{k-1}^{(i)}\right)^2}{g_{k}^{(i)}}, \hspace{0.2cm} i = 1,\hdots,n$$
+    y simplemente hacemos $q_k^{(i)}=0$, si $g_k^{(i)}=0$. En resumen, la aproximación de $q_k$ se puede calcular como:
+
+
+    \begin{align}
+        q_k^{(i)} =
+         \begin{cases}
+           \text{$\frac{\left(g_{k-1}^{(i)}\right)^2}{g_{k}^{(i)}}$} &\quad\text{si  } g_k^{(i)}\neq0\\
+            \text{0} &\quad\text{si  }
+            g_k^{(i)} = 0.
+         \end{cases}
+    \end{align}
+
+    Se programaron estas 3 variantes y se probaron con las funciones de Wood y Rosenbrock con los puntos iniciales utilizados habitualmente en las tareas, posteriormente se realizaron 100 corridas con valores iniciales aleatorios variando el parámetro $\tau_1$ con la función de Wood. Los resultados se muestran en la siguiente sección.
+
+    \begin{algorithm}[h]
+        \SetAlgoLined
+        \KwResult{$x^*$}
+        $\alpha_0$ <- Proponer \\
+        $k=0$ \\
+        \While{$||g_k|| > tol$}{
+            $g_{k} = f(x_{k})$ \\
+            \If{k==0} {
+                Usar $\alpha_k = \alpha_0$\\
+            }
+            \ElseIf{Min de iteraciones para ANGRM, ANGR1 o ANGR2} {
+                Usar (15), (16) o (17) para calcular  $\alpha_k$\\
+            }
+            \Else {
+                Usar (5) para calcular $\alpha_k$
+            }
+            $x_{k+1} = x_k + \alpha_k d_k$ \\
+
+            $k= k+1$\\
+        }
+        \caption{Algoritmo ANGRM, ANGR1 y ANGR2}
+        \label{A1}
+    \end{algorithm}
+
+    \section{Resultados}
+    En esta sección se presentan las comparaciones númericas entre los métodos ANGM, ANGR1, ANGR2 y los tradicionales BB1 y BB2.  Para las primeras pruebas se utilizó un valor de $\tau_1= 0.4$ y $\tau_2 = 1$.\\
+    En primer lugar se probó la función de Wood con el siguiente punto inicial
+    $$x^0 = [-3,-1,-3,-1]^T$$
+    El cuadro \ref{c1} muestra la comparación entre el promedio del número de iteraciones, la norma del gradiente y el tiempo con los 3 métodos propuestos y los BB con tamaños de paso BB1 y BB2.
+    \begin{table}[H]
+    \centering
+    \caption{Resultados promedio de 100 ejecuciones de los métodos con la Función Wood}
+    \label{c1}
+    \resizebox{9 cm}{!}{% <------ Don't forget this %
+    \begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+                               & \textbf{BB1} & \textbf{BB2} & \textbf{ANGRM} & \textbf{ANGR1} & \textbf{ANGR2} \\ \hline
+    \textbf{Iteraciones}       & 7234         & 379          & 242            & 398            & 323            \\ \hline
+    \textbf{$||\nabla f(x)||$} & 8.96e-07     & 2.50e-07     & 2.67e-09       & 2.65e-07       & 1.43e-07       \\ \hline
+    \textbf{Tiempo (s)}        & 0.3456       & 0.028        & 0.026          & 0.041          & 0.029          \\ \hline
+    \end{tabular}
+    }
+    \end{table}
+    Se observa que el número más grande de iteraciones y tiempo de ejecución se obtuvo con BB1, el método que proporcionó el mejor desempeño fue el ANGRM. En general es posible notar que a pesar de que wood es una función de pocas dimensiones los métodos propuestos se comportan de mejor forma.\\
+    Posteriormente se probó con la función de Rosembrock con el siguiente punto inicial
+    $$x^0 = [-1.2,1,1, \hdots, 1,-1.2,1]$$
+    En el cuadro \ref{c2} se presentan los resultados.
+
+    \begin{table}[H]
+    \centering
+    \caption{Resultados promedio de 100 ejecuciones de los métodos con la Funcion Rosembrock}
+    \label{c2}
+    \resizebox{9 cm}{!}{% <------ Don't forget this %
+    \begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+                               & \textbf{BB1} & \textbf{BB2} & \textbf{ANGRM} & \textbf{ANGR1} & \textbf{ANGR2} \\ \hline
+    \textbf{Iteraciones}       & 1087         & 1012         & 329            & 334            & 299            \\ \hline
+    \textbf{$||\nabla f(x)||$} & 7.18e-07     & 9.56e-07     & 8.22e-07       & 1.81e-07       & 3.55e-07       \\ \hline
+    \textbf{Tiempo (s)}        & 1.41         & 1.35         & 0.81           & 0.72           & 0.57           \\ \hline
+    \end{tabular}
+    }
+    \end{table}
+
+    Con la función de Rosembrock las diferencias en el desempeño de los algoritmos son más notorias. El cuadro \ref{c2} muestra que los tiempos de ejecución para los 2 tamaños de paso del BB superan por casi el doble el de los 3 métodos propuestos.\\
+
+    El número de iteraciones tanto del BB1 como del BB2 es alrededor de 3 veces mayor.\\
+
+    \FloatBarrier
+    \begin{table*}[!htbp]
+    \centering
+    \caption{Función Wood puntos aleatorios promedio de 100 corridas }
+    \label{c3}
+    \resizebox{16 cm}{!}{% <------ Don't forget this %
+    \begin{tabular}{llllllllll}
+    \hline
+    \multicolumn{1}{|l|}{}             & \multicolumn{3}{c|}{\textbf{ANGM}}                                                                                                     & \multicolumn{3}{c|}{\textbf{ANGR1}}                                                                                                    & \multicolumn{3}{c|}{\textbf{ANGRR2}}                                                                                                     \\ \hline
+    \multicolumn{1}{|c|}{\textbf{t1}}  & \multicolumn{1}{c|}{\textit{iter}} & \multicolumn{1}{c|}{\textit{$||\nabla f(x)||$}} & \multicolumn{1}{l|}{\textit{Tiempo (s)}} & \multicolumn{1}{l|}{\textit{iter}} & \multicolumn{1}{l|}{\textit{$||\nabla f(x)||$}} & \multicolumn{1}{l|}{\textit{Tiempo (s)}} & \multicolumn{1}{l|}{\textit{iter}} & \multicolumn{1}{l|}{\textit{$||\nabla f(x)||$}} & \multicolumn{1}{l|}{\textit{iter}} \\ \hline
+
+    \multicolumn{1}{|c|}{\textit{ 0.1 }} & \multicolumn{1}{c|}{ 201.73 } & \multicolumn{1}{c|}{ 3.885e-07 } & \multicolumn{1}{c|}{ 1.681e-02 }& \multicolumn{1}{c|}{ 207.24 } & \multicolumn{1}{c|}{ 3.837e-07 } & \multicolumn{1}{c|}{ 1.576e-02 }& \multicolumn{1}{c|}{ 224.08 } & \multicolumn{1}{c|}{ 4.240e-07 } & \multicolumn{1}{c|}{ 1.442e-02 } \\ \hline
+    \multicolumn{1}{|c|}{\textit{ 0.2 }} & \multicolumn{1}{c|}{ 169.15 } & \multicolumn{1}{c|}{ 3.991e-07 } & \multicolumn{1}{c|}{ 1.402e-02 }& \multicolumn{1}{c|}{ 185.11 } & \multicolumn{1}{c|}{ 3.482e-07 } & \multicolumn{1}{c|}{ 1.400e-02 }& \multicolumn{1}{c|}{ 112.13 } & \multicolumn{1}{c|}{ 3.999e-07 } & \multicolumn{1}{c|}{ 7.267e-03 } \\ \hline
+    \multicolumn{1}{|c|}{\textit{ 0.3 }} & \multicolumn{1}{c|}{ 73.85 } & \multicolumn{1}{c|}{ 3.761e-07 } & \multicolumn{1}{c|}{ 6.321e-03 }& \multicolumn{1}{c|}{ 83.3 } & \multicolumn{1}{c|}{ 3.843e-07 } & \multicolumn{1}{c|}{ 6.352e-03 }& \multicolumn{1}{c|}{ 82.21 } & \multicolumn{1}{c|}{ 3.400e-07 } & \multicolumn{1}{c|}{ 5.364e-03 } \\ \hline
+    \multicolumn{1}{|c|}{\textit{ 0.4 }} & \multicolumn{1}{c|}{ 89.39 } & \multicolumn{1}{c|}{ 3.578e-07 } & \multicolumn{1}{c|}{ 7.679e-03 }& \multicolumn{1}{c|}{ 89.17 } & \multicolumn{1}{c|}{ 3.021e-07 } & \multicolumn{1}{c|}{ 6.899e-03 }& \multicolumn{1}{c|}{ 79.93 } & \multicolumn{1}{c|}{ 3.750e-07 } & \multicolumn{1}{c|}{ 5.338e-03 } \\ \hline
+    \multicolumn{1}{|c|}{\textit{ 0.5 }} & \multicolumn{1}{c|}{ 82.28 } & \multicolumn{1}{c|}{ 3.337e-07 } & \multicolumn{1}{c|}{ 6.963e-03 }& \multicolumn{1}{c|}{ 84.95 } & \multicolumn{1}{c|}{ 3.590e-07 } & \multicolumn{1}{c|}{ 6.546e-03 }& \multicolumn{1}{c|}{ 88.11 } & \multicolumn{1}{c|}{ 3.405e-07 } & \multicolumn{1}{c|}{ 5.743e-03 } \\ \hline
+    \multicolumn{1}{|c|}{\textit{ 0.6 }} & \multicolumn{1}{c|}{ 78.43 } & \multicolumn{1}{c|}{ 2.942e-07 } & \multicolumn{1}{c|}{ 6.642e-03 }& \multicolumn{1}{c|}{ 88.97 } & \multicolumn{1}{c|}{ 3.638e-07 } & \multicolumn{1}{c|}{ 6.832e-03 }& \multicolumn{1}{c|}{ 84.6 } & \multicolumn{1}{c|}{ 3.327e-07 } & \multicolumn{1}{c|}{ 5.558e-03 } \\ \hline
+    \multicolumn{1}{|c|}{\textit{ 0.7 }} & \multicolumn{1}{c|}{ 74.86 } & \multicolumn{1}{c|}{ 3.409e-07 } & \multicolumn{1}{c|}{ 6.361e-03 }& \multicolumn{1}{c|}{ 91.47 } & \multicolumn{1}{c|}{ 3.107e-07 } & \multicolumn{1}{c|}{ 7.013e-03 }& \multicolumn{1}{c|}{ 89.14 } & \multicolumn{1}{c|}{ 2.921e-07 } & \multicolumn{1}{c|}{ 5.777e-03 } \\ \hline
+    \multicolumn{1}{|c|}{\textit{ 0.8 }} & \multicolumn{1}{c|}{ 88.96 } & \multicolumn{1}{c|}{ 2.767e-07 } & \multicolumn{1}{c|}{ 7.517e-03 }& \multicolumn{1}{c|}{ 93.02 } & \multicolumn{1}{c|}{ 3.024e-07 } & \multicolumn{1}{c|}{ 7.107e-03 }& \multicolumn{1}{c|}{ 92.94 } & \multicolumn{1}{c|}{ 2.595e-07 } & \multicolumn{1}{c|}{ 6.112e-03 } \\ \hline
+    \multicolumn{1}{|c|}{\textit{ 0.9 }} & \multicolumn{1}{c|}{ 100.85 } & \multicolumn{1}{c|}{ 2.820e-07 } & \multicolumn{1}{c|}{ 8.722e-03 }& \multicolumn{1}{c|}{ 101.53 } & \multicolumn{1}{c|}{ 2.914e-07 } & \multicolumn{1}{c|}{ 7.821e-03 }& \multicolumn{1}{c|}{ 93.06 } & \multicolumn{1}{c|}{ 2.672e-07 } & \multicolumn{1}{c|}{ 6.227e-03 } \\ \hline
+
+
+    \end{tabular}
+    }
+    \end{table*}
+    \FloatBarrier
+
+    Para darnos una mejor idea del verdadero desempeño de los algoritmos propuestos, se realizaron 100 corridas de la función de Wood con punto inicial aleatorio, además se varió el parámetro $\tau_1$ de 0.1 a 0.9 en incrementos de 0.1. El promedio de los resultados obtenidos se muestra en el cuadro \ref{c3}. La función de Resombrock fue omitida puesto que es una función en general no convexa y comúnmente los puntos aleatoreos iniciales seleccionados hacen que los algoritmos no convergan; recuérdese que el algoritmo de Barzilai-Borwein (BB) no garantiza convergencia en problemas no convexos ni suavemente convexos.
+
+    De forma general se  aprecia que tanto valores muy pequeños de $\tau_1$ como valores muy grande deterioran el desempeño de ANGM, ANGR1, ANGR2. \\
+
+    El menor número de iteraciones en ANGM y ANGR1 se obtuvo con un valor de $\tau_1 = 0.3$, mientras que para ANGR1 se consiguió con $\tau_1 = 0.4$.\\
+
+    En el cuadro \ref{c4} se presentan los resultados obtenidos para el BB1 y BB2.
+    \begin{table}[H]
+    \centering
+    \caption{Función Wood puntos aleatorios promedios 100 corridas}
+    \label{c4}
+    \resizebox{8 cm}{!}{% <------ Don't forget this %
+
+    \begin{tabular}{|c|c|l|c|l|l|}
+    \hline
+    \multicolumn{3}{|c|}{\textbf{BB1}}                                         & \multicolumn{3}{c|}{\textbf{BB2}}                                                                \\ \hline
+    \textit{iter} & \textit{$||\nabla f(x)||$} & \textit{Tiempo (s)}    & \multicolumn{1}{l|}{\textit{iter}} & \textit{$||\nabla f(x)||$} & \textit{Tiempo (s)}     \\ \hline
+
+    509.31 & 4.437e-07 & \multicolumn{1}{c|}{ 1.614e-02 } & 136.62 & \multicolumn{1}{c|}{ 5.345e-07 }    &  \multicolumn{1}{c|}{ 4.170e-03 } \\ \hline
+    \end{tabular}
+
+    }
+    \end{table}
+
+    Si se comparan los tiempos de ejecución de estos 2 métodos contra los 3 propuestos durante las 100 corridas, se observa que el obtenido para BB1 es un ordén de magnitud superior, mientras que BB2 tiene un desempeño similar  a ANGM, ANGR1 y ANGR2 aunque en un mayor número de iteraciones.
+
+
+
+\section{Conclusiones}
+
+Se mostró un resumen y resultados obtenidos del método desarrallado por Yakui Huang, Yu-Hong Dai, Xin-Wei Liu y Hongchao Zhang basado en una mejora el método ya conocido de Barzilai-Borwein, en pro de aprovechar la particularidad de evitar calcular el tamaño de paso exacto $\alpha^{SD}$ lo cual puede resultar muy costoso e introducir pasos monótonos con tal de retener monotonicidad y ayudar a acelerar este algoritmo.
+
+Se presentaron 3 variantes del algoritmo, la primera ANGM, que bajo este análisis aún hace uso de la matriz A para el cálculo del paso de gradiente, la primer modificación al usar un tamaño de paso retardado permite deshacerse del uso de está matriz llevando al método ANGR1, y posteriormente usando como cota $\Tilde{\alpha}_{k-1}^{BB2} \leq min\{\alpha_k^{BB2}, \hat{\alpha}_{k-2}\}$ permite derivar la tercera versión, ANGR2. Los resultados mostrados en la sección anterior demuestran que se logra una mejora significante en comparación del método de Barzilai-Borwein normal.
+
+\section*{}
+
+\begin{thebibliography}{00}
+\bibitem{b1} Yakui Huang, Yu-Hong Dai, Xin-Wei Liu, Hongchao Zhang, On the acceleration of the Barzilai-Borwein method, arXiv:2001.02335
+.
+\end{thebibliography}
+
+\end{document}
